@@ -667,7 +667,7 @@ namespace dicebuff
         private GUIStyle _style;
         private bool _styleInitialized;
 
-        // ➜ 말풍선 배경용 하얀 텍스처
+        // 말풍선 배경용 하얀 텍스처
         private Texture2D _bgTex;
 
         private int _lastRoll;
@@ -681,6 +681,8 @@ namespace dicebuff
         private Camera _camera;
         private Transform _playerTransform;
 
+        // ➜ 어떤 언어 브랜치를 썼는지 한 번만 로그 찍기
+        private bool _langLogged;
         private void Awake()
         {
             if (_instance != null && _instance != this)
@@ -740,17 +742,51 @@ namespace dicebuff
             _style.padding = new RectOffset(8, 8, 6, 6);
             _style.wordWrap = true;
 
-            // ───── 하얀 말풍선 배경 생성 ─────
+            // ───── 하얀 말풍선 배경 ─────
             if (_bgTex == null)
             {
                 _bgTex = new Texture2D(1, 1);
                 _bgTex.SetPixel(0, 0, new Color(1f, 1f, 1f, 0.95f)); // 거의 흰색, 살짝 투명
                 _bgTex.Apply();
             }
-
             _style.normal.background = _bgTex;
 
             _styleInitialized = true;
+        }
+
+        // 시스템 언어에 따라 말풍선 텍스트 생성
+        // 시스템 언어에 따라 말풍선 내용 선택
+        private string GetBubbleText()
+        {
+            SystemLanguage lang = Application.systemLanguage;
+
+            // 디버그용: 실제로 어떤 언어 브랜치를 타는지 한 번만 로그
+            if (!_langLogged)
+            {
+                _langLogged = true;
+                Debug.Log("[MutatorDice] DiceBuffHUD.GetBubbleText - systemLanguage = " + lang);
+            }
+
+            switch (lang)
+            {
+                case SystemLanguage.Korean:
+                    // 한국어
+                    return string.Format(
+                        "주사위 {0}\n이속 x{1:F2} / 받피 x{2:F2} / 공격 x{3:F2}",
+                        _lastRoll, _lastMoveMul, _lastTakenMul, _lastDealtMul);
+
+                case SystemLanguage.Japanese:
+                    // 일본어
+                    return string.Format(
+                        "ダイス {0}\n移動速度 x{1:F2} / 被ダメージ x{2:F2} / 与ダメージ x{3:F2}",
+                        _lastRoll, _lastMoveMul, _lastTakenMul, _lastDealtMul);
+
+                default:
+                    // 그 외 → 영어
+                    return string.Format(
+                        "Dice {0}\nMove x{1:F2} / Dmg taken x{2:F2} / Dmg dealt x{3:F2}",
+                        _lastRoll, _lastMoveMul, _lastTakenMul, _lastDealtMul);
+            }
         }
 
 
@@ -780,13 +816,11 @@ namespace dicebuff
 
             Rect rect = new Rect(x, y, width, height);
 
-            string text = string.Format(
-                "주사위 {0}\n이속 x{1:F2} / 받피 x{2:F2} / 공격 x{3:F2}",
-                _lastRoll, _lastMoveMul, _lastTakenMul, _lastDealtMul);
-
+            string text = GetBubbleText();
             GUI.Box(rect, text, _style);
         }
     }
+
 
     internal static class DiceDamagePatch
     {
