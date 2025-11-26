@@ -70,7 +70,7 @@ namespace dicebuff
         private const float InventoryScanInterval = 2f;
 
         private float _nextRollTime;
-        private const float RollInterval = 20f; // 20초마다 자동 굴림
+        private const float RollInterval = 300f; // 5분마다 자동 굴림
 
         private readonly System.Random _rng = new System.Random();
 
